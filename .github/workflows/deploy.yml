@@ -1,0 +1,44 @@
+jobsname: Deploy Angular from ZIP
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract project ZIP
+        run: |
+          mkdir extracted
+          unzip -o *.zip -d extracted
+          find extracted -maxdepth 4 -name package.json
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Angular dependencies
+        working-directory: extracted/frontend
+        run: npm install
+
+      - name: Build Angular
+        working-directory: extracted/frontend
+        run: npm run build -- --base-href /testTD/
+
+      - name: Prepare Pages files
+        run: |
+          mkdir public
+          find extracted/frontend/dist -name index.html
